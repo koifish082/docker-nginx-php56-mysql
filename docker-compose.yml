@@ -1,0 +1,27 @@
+version: '2'
+services:
+  nginx:
+    build: ./nginx
+    ports:
+      - "5000:80"
+      - "5443:443"
+    volumes:
+      - "./nginx/log:/var/log/nginx"
+  web:
+    build: .
+    ports:
+      - "5001:80"
+    volumes:
+      - ~/projects/sample/symfony2-book:/var/www/vhosts/webapp
+    links:
+      - mysql
+  mysql:
+    image: mysql
+    ports:
+      - "3306:3306"
+    volumes:
+      - "./mysql/data:/var/lib/mysql"
+      - "./mysql/log:/var/log/mysql"
+    environment:
+      MYSQL_ROOT_PASSWORD: "root"
+    # my.cnf, data,

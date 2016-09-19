@@ -1,0 +1,57 @@
+server {
+    listen 80 default_server;
+    listen [::]:80 default_server ipv6only=on;
+
+    root /var/www/vhosts;
+    #index index.php index.html index.htm;
+
+    # Make site accessible from http://localhost/
+    server_name localhost;
+    # server_name local-symfony2book.com;
+
+    # symfony2book app
+    set $symfony2book_root /webapp;
+    location ~ ^/symfony2book(/.*)?$ {
+        set $symfony2book_prefix /symfony2book;
+        set $symfony2book_exec app.php;
+        try_files $symfony2book_root/web$1 @symfony2bookapp;
+    }
+    location ~ ^/symfony2bookdev(/.*)?$ {
+        set $symfony2book_prefix /symfony2bookdev;
+        set $symfony2book_exec app_dev.php;
+        expires off;
+        try_files $symfony2book_root/web$1 @symfony2bookapp;
+    }
+    location @symfony2bookapp {
+        fastcgi_pass unix:/var/run/php5-fpm.sock;
+        include fastcgi_params;
+        fastcgi_param SCRIPT_FILENAME $document_root$symfony2book_root/web/$symfony2book_exec;
+        fastcgi_param SCRIPT_NAME $symfony2book_prefix/$symfony2book_exec;
+        #       fastcgi_split_path_info (.+\.php)(/.*)$;
+        fastcgi_param HTTPS off;
+    }
+
+    location ~ \.php$ {
+        try_files $uri =404;
+        fastcgi_pass unix:/var/run/php5-fpm.sock;
+        fastcgi_index index.php;
+        fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
+        include fastcgi_params;
+    }
+
+    # Only for nginx-naxsi used with nginx-naxsi-ui : process denied requests
+    #location /RequestDenied {
+    #   proxy_pass http://127.0.0.1:8080;
+    #}
+
+    # pass the PHP scripts to FastCGI server listening on 127.0.0.1:9000
+    #
+
+    # deny access to .htaccess files, if Apache's document root
+    # concurs with nginx's one
+    #
+    location ~ /\.ht {
+        deny all;
+    }
+}
+
